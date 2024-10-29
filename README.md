@@ -1,42 +1,60 @@
-# ollama-completion
+# Ollama Completion
 
 ![Build](https://github.com/Izulan/ollama-completion/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties) and [pluginName](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
-
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
-
-To keep everything working, do not remove `<!-- ... -->` sections. 
+This IntelliJ plugin adds an Ollama-backed provider for inline completions.
+- Supports arbitrary models with configurable parameters</li>
+- Caches requests for increased responsiveness</li>
 <!-- Plugin description end -->
 
+## Setup
+
+### Install Ollama
+
+Install a version of Ollama starting from `0.4` ([get here](https://github.com/ollama/ollama/releases)).
+Previous releases have broken stop-sequence handling, which might cut off unwanted parts of completions.
+
+### Configure a Model
+
+- Head to <kbd>Settings/Preferences</kbd> > <kbd>Tools</kbd> > <kbd>Ollama Completion</kbd>
+- Enter your Ollama URL and connect to get an overview of installed models.
+- Select a model by clicking the checkmark in the toolbar
+- (Optional) Edit other properties such as context size and system message
+
+It can be quite challenging to configure small off-the-shelf models for completions.
+Completions can be multi-line, but single-line tends to be easier,
+since these models may not adhere
+
+#### Good Sample Model (for Code)
+
+I've found a reconfigured **Qwen2.5-Coder** to be a good choice.
+It works very well for full-line-code-completion.
+
+1. Create a modelfile (text file) with the following content:
+
+    ```
+    FROM qwen2.5-coder:7b
+
+    TEMPLATE """<|fim_prefix|>{{ .Prompt }}<|fim_suffix|><|fim_middle|>"""
+
+    PARAMETER stop "<|endoftext|>"
+    PARAMETER stop "
+    "
+    ```
+
+2. Load it using the Ollama CLI:
+    ```
+    ollama create full-line-completion -f <modelfile>
+    ```
+    where `<modelfile>` is the name of the file from step 1.
+
+Alternatively, click the plus icon in the settings page and paste the modelfile.
+
+
+That model is quite big (~5GB). If that is too large, use `qwen2.5-coder:1.5b` (~1GB) instead.
+
 ## Installation
-
-- Using the IDE built-in plugin system:
-  
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "ollama-completion"</kbd> >
-  <kbd>Install</kbd>
-  
-- Using JetBrains Marketplace:
-
-  Go to [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID) and install it by clicking the <kbd>Install to ...</kbd> button in case your IDE is running.
-
-  You can also download the [latest release](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID/versions) from JetBrains Marketplace and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 - Manually:
 

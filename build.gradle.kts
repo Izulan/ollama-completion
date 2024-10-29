@@ -32,6 +32,9 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     testImplementation(libs.junit)
+    testImplementation(libs.jupiter)
+    implementation(libs.ollama4j)
+    testImplementation(libs.opentest4j)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -119,6 +122,9 @@ kover {
     reports {
         total {
             xml {
+                onCheck = true
+            }
+            html {
                 onCheck = true
             }
         }
