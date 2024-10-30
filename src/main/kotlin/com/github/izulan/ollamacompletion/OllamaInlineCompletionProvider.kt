@@ -16,7 +16,7 @@ import kotlin.math.abs
 
 class OllamaInlineCompletionProvider : InlineCompletionProvider {
     override val id: InlineCompletionProviderID
-        get() = InlineCompletionProviderID("com.github.izulan.ollamacompletion.OllamaInlineCompletionProvider")
+        get() = InlineCompletionProviderID("Ollama")
 
     private val completionService = service<CompletionService>()
     private val settings get() = service<OllamaSettings>()

@@ -3,7 +3,7 @@
 <idea-plugin>
     <id>com.github.izulan.ollamacompletion</id>
     <name>ollama-completion</name>
-    <vendor>izulan</vendor>
+    <vendor>Jakob Klaushofer</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
@@ -21,7 +21,7 @@
                 id="org.intellij.sdk.settings.AppSettingsConfigurable"
                 displayName="Ollama Completion"/>
         <inline.completion.provider
-                id="com.github.izulan.ollamacompletion.OllamaInlineCompletionProvider"
+                id="Ollama"
                 implementation="com.github.izulan.ollamacompletion.OllamaInlineCompletionProvider"/>
     </extensions>
 </idea-plugin>

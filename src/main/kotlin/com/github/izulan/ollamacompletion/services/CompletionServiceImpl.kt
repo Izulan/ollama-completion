@@ -13,6 +13,7 @@ import io.ktor.http.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import com.github.izulan.ollamacompletion.settings.OllamaSettings
+import com.intellij.openapi.diagnostic.thisLogger
 
 @Service(Service.Level.APP)
 class CompletionServiceImpl(private val cs: CoroutineScope) : CompletionService {
@@ -78,7 +79,7 @@ class CompletionServiceImpl(private val cs: CoroutineScope) : CompletionService 
                         break
                     }
                 } catch (ex: JsonMappingException) {
-
+                    thisLogger().error("Could not parse Ollama packet", packet)
                 }
             }
         }

@@ -2,6 +2,9 @@ package com.github.izulan.ollamacompletion.settings
 
 import com.intellij.openapi.components.BaseState
 
+/**
+ * State for plugin settings.
+ */
 class OllamaSettingsState : BaseState() {
     var host by string("http://localhost:11434/")
     var selectedModel by string()

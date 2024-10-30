@@ -5,8 +5,14 @@ import com.intellij.openapi.components.SimplePersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
+/**
+ * Persistent settings state with some UI-required compatibility properties.
+ */
 @Service(Service.Level.APP)
-@State(name = "com.github.izulan.ollamacompletion.settings.OllamaSettings", storages = [Storage("OllamaCompletion.xml")])
+@State(
+    name = "com.github.izulan.ollamacompletion.settings.OllamaSettings",
+    storages = [Storage("OllamaCompletion.xml")]
+)
 class OllamaSettings() : SimplePersistentStateComponent<OllamaSettingsState>(OllamaSettingsState()) {
     var host
         get() = state.host ?: ""

@@ -1,4 +1,4 @@
-# Ollama Completion
+# Ollama Completion ![Ollama Org](./src/main/resources/META-INF/pluginIcon.svg)
 
 ![Build](https://github.com/Izulan/ollama-completion/workflows/Build/badge.svg)
 

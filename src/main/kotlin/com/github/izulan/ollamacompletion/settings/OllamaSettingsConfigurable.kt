@@ -4,8 +4,8 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.*
@@ -14,26 +14,26 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.builder.Cell
 import io.github.ollama4j.OllamaAPI
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import javax.swing.JLabel
 import javax.swing.JList
-import javax.swing.ListCellRenderer
 import javax.swing.ListSelectionModel
 import io.github.ollama4j.models.response.Model as OllamaModel
 
+/**
+ * Main settings page for the plugin.
+ */
 class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
     private val settings get() = service<OllamaSettings>()
     private val coroutineHelper get() = service<OllamaSettingsCoroutineHelper>()
+
     private lateinit var connectionStatusLabel: Cell<JLabel>
     private lateinit var hostnameTextField: Cell<JBTextField>
     private lateinit var modelList: JBList<OllamaModel>
     private lateinit var listGroup: Row
     private var api = OllamaAPI(settings.host)
-
     private var selectedModel: String? = null
 
-    private fun createRenderer(): ListCellRenderer<OllamaModel> = object : ColoredListCellRenderer<OllamaModel>() {
+    private inner class ModelListRenderer : ColoredListCellRenderer<OllamaModel>() {
         override fun customizeCellRenderer(
             list: JList<out OllamaModel>,
             value: OllamaModel,
@@ -66,7 +66,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
         selectedModel = settings.state.selectedModel
         modelList = JBList<OllamaModel>().apply {
             selectionMode = ListSelectionModel.SINGLE_SELECTION
-            cellRenderer = createRenderer()
+            cellRenderer = ModelListRenderer()
         }
 
         val modelListToolbar = ToolbarDecorator.createDecorator(modelList)
@@ -83,7 +83,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
             addExtraActions(
                 object : AnAction("Show", "Show the modelfile", AllIcons.Actions.Show) {
                     override fun getActionUpdateThread(): ActionUpdateThread {
-                        return ActionUpdateThread.BGT
+                        return ActionUpdateThread.EDT
                     }
 
                     override fun update(e: AnActionEvent) {
@@ -96,7 +96,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
                 },
                 object : AnAction("Set as Completion Model", "Set as completion model", AllIcons.Actions.Checked) {
                     override fun getActionUpdateThread(): ActionUpdateThread {
-                        return ActionUpdateThread.BGT
+                        return ActionUpdateThread.EDT
                     }
 
                     override fun update(e: AnActionEvent) {
@@ -134,9 +134,12 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
                     .bindText(settings::systemPrompt)
                     .align(AlignX.FILL)
                     .rows(5)
+                    .comment("May be ignored depending on the model.")
             }
             row {
-                checkBox("Delete tail").bindSelected(settings.state::deleteLineTail)
+                checkBox("Delete tail")
+                    .bindSelected(settings.state::deleteLineTail)
+                    .comment("If a completion is mid-line, this setting will replace the rest of the line with the completion.")
             }
             group("Parameters (Independent of Model)") {
                 row("Context size:") {
@@ -163,21 +166,17 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
         connectionStatusLabel.component.icon = AnimatedIcon.Default()
         connectionStatusLabel.component.text = "Fetching Models..."
         listGroup.enabled(false)
-        coroutineHelper.testConnection(
+        coroutineHelper.getModelList(
             api,
             onSuccess = { models ->
-                withContext(Dispatchers.EDT) {
-                    connectionStatusLabel.component.icon = AllIcons.General.InspectionsOK
-                    connectionStatusLabel.component.text = "Connection successful"
-                    modelList.model = CollectionListModel(models)
-                    listGroup.enabled(true)
-                }
+                connectionStatusLabel.component.icon = AllIcons.General.InspectionsOK
+                connectionStatusLabel.component.text = "Connection successful"
+                modelList.model = CollectionListModel(models)
+                listGroup.enabled(true)
             },
             onError = { exn ->
-                withContext(Dispatchers.EDT) {
-                    connectionStatusLabel.component.icon = AllIcons.General.Error
-                    connectionStatusLabel.component.text = "Connection failed: ${exn.message ?: "Connection failed"}"
-                }
+                connectionStatusLabel.component.icon = AllIcons.General.Error
+                connectionStatusLabel.component.text = "Connection failed: ${exn.message ?: "Connection failed"}"
             }
         )
     }
@@ -186,11 +185,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
     private fun openModelDetail() {
         val name = modelList.selectedValue.name
         coroutineHelper.getModelDetails(api, name, {
-            withContext(Dispatchers.EDT) {
-                ModelDetailDialog(name, it.modelFile).show()
-            }
-        }, {
-            println(it)
-        })
+            ModelDetailDialog(name, it.modelFile).show()
+        }, { thisLogger().error(it) })
     }
 }
