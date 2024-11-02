@@ -13,7 +13,7 @@ import com.intellij.openapi.components.Storage
     name = "com.github.izulan.ollamacompletion.settings.OllamaSettings",
     storages = [Storage("OllamaCompletion.xml")]
 )
-class OllamaSettings() : SimplePersistentStateComponent<OllamaSettingsState>(OllamaSettingsState()) {
+class OllamaSettings : SimplePersistentStateComponent<OllamaSettingsState>(OllamaSettingsState()) {
     var host
         get() = state.host ?: ""
         set(value) {

@@ -5,7 +5,7 @@ import com.jetbrains.rd.util.first
 /**
  * Compressed prefix trie with LRU pruning that allows for storing completed and incomplete completions.
  *
- * Prefixes and completions share a tree, in fact they can even overlap.
+ * Prefixes and completions share a tree; in fact, they can even overlap.
  *
  * Some invariants hold for the trie after every method call:
  *  - minLruIndex is always the minimum LRU index of all subtrees and the own lruIndex
@@ -38,7 +38,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
         var completionEdge: Edge? = null,
         /** Non-null values signal a termination node with specified LRU index. */
         var lruIndex: Int? = null,
-        /** Only meaningful with LRU index set, then specifies whether terminated completion is complete. */
+        /** Only meaningful with an LRU index set, then specifies whether terminated completion is complete. */
         var isComplete: Boolean = false
     )
 
@@ -55,7 +55,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
      * will be removed and the new one inserted (even if it is incomplete)
      *
      * To complete an incomplete completion, make sure to keep the incomplete completion part of the
-     * completion and not move it to the prefix. That would lead to a new completion, as it does not overlap.
+     * completion and not move it to the prefix. That would lead to a new completion, as it doesn't overlap.
      *
      * @param completion Empty completions will be ignored
      */
@@ -69,7 +69,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
 
     /**
      * Retrieves a completion for the given prefix if it exists.
-     * Updates the LRU indices for the accessed nodes on success.
+     * Updates the LRU indexes for the accessed nodes on success.
      */
     fun getCompletion(prefix: String): CompletionResult? {
         var curNode = root
@@ -130,7 +130,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
     }
 
     /**
-     * Updates the LRU indices on the [path] (top-down).
+     * Updates the LRU indexes on the [path] (top-down).
      * The last element of [path] will assume [newLruIndex].
      *
      * @return Replaced LRU index
@@ -163,7 +163,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
         }
 
         var deletionSizeChange = 0
-        // We are merging into an existing completion that may not match the suffix of the new one.
+        // We're merging into an existing completion that may not match the suffix of the new one.
         // If that completion is complete -> generalize the old one
         // If not -> remove the incomplete one and insert the new one
         if (prefix.isEmpty() && node.completionEdge != null) {
@@ -275,7 +275,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
     private fun removeLeastRecentlyUsedCompletion(node: TrieNode) {
         // Completion to delete found
         if (node.minLruIndex == node.lruIndex) {
-            // Deleting inner completions does not reduce size (as in chars) but
+            // Deleting inner completions doesn't reduce size (as in chars) but
             // can reduce splits and thus actual memory footprint
             node.lruIndex = null
             node.minLruIndex = computeMinLruIndex(node)

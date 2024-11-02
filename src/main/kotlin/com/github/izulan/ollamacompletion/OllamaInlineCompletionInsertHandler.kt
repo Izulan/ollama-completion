@@ -12,14 +12,10 @@ class OllamaInlineCompletionInsertHandler : InlineCompletionInsertHandler {
     ) {
         val skippedTextLength = elements.filterIsInstance<InlineCompletionSkipTextElement>().sumOf { it.text.length }
         val offset = environment.editor.caretModel.offset
-        println(offset)
         var end = offset + skippedTextLength
-        println(end)
         while (end < environment.editor.document.charsSequence.length && environment.editor.document.charsSequence[end] != '\n') {
             ++end
-            println("Moved back")
         }
-        println(end)
         environment.editor.document.deleteString(offset, end)
     }
 

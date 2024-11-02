@@ -122,7 +122,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
                 row("Ollama hostname:") {
                     hostnameTextField = textField().bindText(settings::host)
                 }
-                row() {
+                row {
                     button("Connect") {
                         api = OllamaAPI(hostnameTextField.component.text)
                         fetchModels()

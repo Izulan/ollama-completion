@@ -70,7 +70,8 @@ class CompletionServiceImpl(private val cs: CoroutineScope) : CompletionService,
             publisher.onStart()
 
             try {
-                val options = OptionsBuilder().setNumCtx(settings.state.contextSize)
+                val options = OptionsBuilder()
+                    .setNumCtx(settings.state.contextSize)
                     .setTopP(settings.state.topP)
                     .setTopK(settings.state.topK)
                     .setTemperature(settings.state.temperature)
