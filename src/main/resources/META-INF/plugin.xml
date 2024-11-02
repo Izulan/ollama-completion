@@ -11,6 +11,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.github.izulan.ollamacompletion.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <statusBarWidgetFactory
+                id="OllamaStatus"
+                implementation="com.github.izulan.ollamacompletion.status.OllamaStatusWidgetFactory"/>
         <applicationService
                 serviceInterface="com.github.izulan.ollamacompletion.services.CompletionService"
                 testServiceImplementation="com.github.izulan.ollamacompletion.CompletionServiceMock"
