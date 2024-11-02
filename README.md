@@ -1,4 +1,4 @@
-# Ollama Completion ![Ollama Org](./src/main/resources/META-INF/pluginIcon.svg)
+# ![Ollama Org](./src/main/resources/META-INF/pluginIcon.svg) Ollama Completion
 
 ![Build](https://github.com/Izulan/ollama-completion/workflows/Build/badge.svg)
 
@@ -64,6 +64,14 @@ But this configuration can get tight with an IDE and 16GB RAM.
 
   Download the [latest release](https://github.com/Izulan/ollama-completion/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+
+## Things to Try
+
+Qwen2.5 is especially good at popular and repetitive programming languages, like Java.
+Also, files should be largely self-contained, since we don't pass any additional context to the LLM.
+
+- Good example: [Generic entity from the spring.io website](https://raw.githubusercontent.com/spring-attic/sagan/refs/heads/main/sagan-site/src/main/java/sagan/site/projects/Project.java)
+- Torture test: [SQLite](https://raw.githubusercontent.com/sqlite/sqlite/refs/heads/master/src/btree.c)
 
 
 ---
