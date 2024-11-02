@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.LanguageTextField
 import com.intellij.ui.dsl.builder.*
 import io.github.ollama4j.OllamaAPI
@@ -17,32 +18,33 @@ import javax.swing.JComponent
  *
  * @param api Set this to value to allow model creation, else only view given modelfile.
  */
-class ModelDetailDialog(private var modelName: String, private var modelfile: String, private val api: OllamaAPI? = null) :
+class ModelDetailDialog(
+    private var modelName: String,
+    private var modelfile: String,
+    private val api: OllamaAPI? = null
+) :
     DialogWrapper(true) {
+    private val isReadonly = api == null
     private val coroutineHelper get() = service<OllamaSettingsCoroutineHelper>()
     private lateinit var dialogPanel: DialogPanel
 
     init {
-        title = if (api == null) "View Model" else "Create New Model"
+        title = if (isReadonly) "View Model" else "Create New Model"
         rootPane.defaultButton = null
         super.init()
     }
 
-    override fun createActions(): Array<Action> {
-        if (api == null) {
-            return arrayOf(cancelAction)
-        }
+    override fun createActions(): Array<Action> =
+        if (isReadonly) arrayOf(cancelAction) else arrayOf(cancelAction, okAction)
 
-        return arrayOf(cancelAction, okAction)
-    }
 
     override fun createCenterPanel(): JComponent {
         dialogPanel = panel {
             row("Model Name:") {
-                textField().bindText(::modelName).enabled(api != null)
+                textField().bindText(::modelName).enabled(!isReadonly)
             }
             group("Modelfile") {
-                row() {
+                row {
                     cell(LanguageTextField(PlainTextLanguage.INSTANCE, null, modelfile).apply {
                         preferredSize = Dimension(800, 600)
                         setOneLineMode(false)
@@ -57,7 +59,7 @@ class ModelDetailDialog(private var modelName: String, private var modelfile: St
                         .align(Align.FILL)
                         .focused()
                         .resizableColumn()
-                        .enabled(api != null)
+                        .enabled(!isReadonly)
                 }.resizableRow()
             }
         }
@@ -69,11 +71,15 @@ class ModelDetailDialog(private var modelName: String, private var modelfile: St
 
         dialogPanel.apply()
         super.setOKActionEnabled(false)
+        super.setOKButtonIcon(AnimatedIcon.Default())
         coroutineHelper.createModel(api, modelName, modelfile, {
+            super.setOKButtonIcon(null)
             super.setOKActionEnabled(true)
             super.doOKAction()
         }, {
+            super.setOKButtonIcon(null)
             super.setOKActionEnabled(true)
+            // This will probably be raw JSON, but that is fine
             super.setErrorText(it.message)
         })
     }
