@@ -8,7 +8,7 @@ This IntelliJ plugin adds an Ollama-backed provider for inline completions.
 - Caches requests for increased responsiveness</li>
 <!-- Plugin description end -->
 
-## Setup
+## Prerequisites
 
 ### Install Ollama
 
@@ -28,13 +28,13 @@ since these models may not adhere
 
 #### Good Sample Model (for Code)
 
-I've found a reconfigured **Qwen2.5-Coder** to be a good choice.
+I've found a reconfigured **Qwen2.5-Coder** to be the best choice.
 It works very well for full-line-code-completion.
 
 1. Create a modelfile (text file) with the following content:
 
     ```
-    FROM qwen2.5-coder:7b
+    FROM qwen2.5-coder:1.5b
 
     TEMPLATE """<|fim_prefix|>{{ .Prompt }}<|fim_suffix|><|fim_middle|>"""
 
@@ -52,7 +52,11 @@ It works very well for full-line-code-completion.
 Alternatively, click the plus icon in the settings page and paste the modelfile.
 
 
-That model is quite big (~5GB). If that is too large, use `qwen2.5-coder:1.5b` (~1GB) instead.
+This is using the 1.5B (~1GB) parameter version of Qwen2.5-Coder. 
+It feels nearly instant and the results are sufficient for repetitive tasks.
+
+If you want something smarter that is still quite fast, use `qwen2.5-coder:7b` (~5GB).
+But this configuration can get tight with an IDE and 16GB RAM.
 
 ## Installation
 
