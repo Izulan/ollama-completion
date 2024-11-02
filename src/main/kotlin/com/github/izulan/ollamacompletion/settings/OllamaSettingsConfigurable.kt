@@ -62,8 +62,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
         return super.isModified() || selectedModel != settings.state.selectedModel
     }
 
-    override fun createPanel(): DialogPanel {
-        selectedModel = settings.state.selectedModel
+    private fun createModelListWithToolbar(): ToolbarDecorator {
         modelList = JBList<OllamaModel>().apply {
             selectionMode = ListSelectionModel.SINGLE_SELECTION
             cellRenderer = ModelListRenderer()
@@ -111,6 +110,13 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
             )
         }
 
+        return modelListToolbar
+    }
+
+    override fun createPanel(): DialogPanel {
+        selectedModel = settings.state.selectedModel
+        val modelList = createModelListWithToolbar()
+
         return panel {
             group("Connection") {
                 row("Ollama hostname:") {
@@ -126,7 +132,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
             }
             listGroup = group("Completion Model") {
                 row {
-                    cell(modelListToolbar.createPanel()).align(AlignX.FILL)
+                    cell(modelList.createPanel()).align(AlignX.FILL)
                 }
             }.enabled(false)
             row("System prompt:") {
