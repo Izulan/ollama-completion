@@ -2,15 +2,12 @@
 <!--suppress ALL -->
 <idea-plugin>
     <id>com.github.izulan.ollamacompletion</id>
-    <name>ollama-completion</name>
+    <name>Ollama Completion</name>
     <vendor>Jakob Klaushofer</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.izulan.ollamacompletion.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
         <statusBarWidgetFactory
                 id="OllamaStatus"
                 implementation="com.github.izulan.ollamacompletion.status.OllamaStatusWidgetFactory"/>

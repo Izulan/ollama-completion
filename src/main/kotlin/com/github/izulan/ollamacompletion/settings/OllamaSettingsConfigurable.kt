@@ -75,12 +75,11 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
                     fetchModels()
                 }
             }
-            setRemoveAction {
-            }
+            disableRemoveAction()
             disableUpAction()
             disableDownAction()
             addExtraActions(
-                object : AnAction("Show", "Show the modelfile", AllIcons.Actions.Show) {
+                object : AnAction("Show Modelfile", "Show modelfile", AllIcons.Actions.Show) {
                     override fun getActionUpdateThread(): ActionUpdateThread {
                         return ActionUpdateThread.EDT
                     }
@@ -104,7 +103,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
 
                     override fun actionPerformed(e: AnActionEvent) {
                         selectedModel = modelList.selectedValue.name
-                        modelList.updateUI()
+                        modelList.repaint()
                     }
                 },
             )
@@ -154,15 +153,15 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
                 }
                 row("Temperature:") {
                     spinner(0.0..4.0, 0.01).bindValue(settings::temperature)
-                        .comment("The temperature of the model. Increasing the temperature will make the model answer more creatively. (Default: 0.8)")
+                        .comment("[0,4] The temperature of the model. Increasing the temperature will make the model answer more creatively. (Default: 0.8)")
                 }
                 row("TopK:") {
                     spinner(0..200, 1).bindIntValue(settings.state::topK)
-                        .comment("Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative. (Default: 40)")
+                        .comment("[0,200] Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative. (Default: 40)")
                 }
                 row("TopP:") {
                     spinner(0.0..4.0, 0.01).bindValue(settings::topP)
-                        .comment("Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text. (Default: 0.9)")
+                        .comment("[0,4] Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text. (Default: 0.9)")
                 }
             }
         }
@@ -172,6 +171,7 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
         connectionStatusLabel.component.icon = AnimatedIcon.Default()
         connectionStatusLabel.component.text = "Fetching Models..."
         listGroup.enabled(false)
+
         coroutineHelper.getModelList(
             api,
             onSuccess = { models ->
@@ -192,6 +192,6 @@ class OllamaSettingsConfigurable : BoundConfigurable("Ollama Settings") {
         val name = modelList.selectedValue.name
         coroutineHelper.getModelDetails(api, name, {
             ModelDetailDialog(name, it.modelFile).show()
-        }, { thisLogger().error(it) })
+        }, { thisLogger().warn(it) })
     }
 }

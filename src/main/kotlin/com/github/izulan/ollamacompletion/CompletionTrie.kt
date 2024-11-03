@@ -15,7 +15,7 @@ import com.jetbrains.rd.util.first
  *      which indicates the end. `isComplete` indicates the status of that completion.
  *      - terminal nodes can be inner nodes but all leaves must be terminal nodes
  *  - Inner nodes must have at least two children (otherwise they must be compressed),
- *  except if a completion begins in the middle of them
+ *  except if a completion begins between them
  */
 class CompletionTrie(private var maxSize: Int = 1_000_000) {
     private val root = TrieNode()
@@ -48,14 +48,15 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
     /**
      * Inserts a completion into the trie.
      * - Traverses the trie as per the given prefix input
-     * - Same for the completion input, but also lay completion pointers
+     * - Same for the completion input, but also lay completion pointers this time
      * - If the node during the completion traversal already points to a completed completion,
-     * the to be inserted completion will be **ignored**, and the LRU updated.
+     * the to be inserted completion will be **ignored**, and the LRU updated
      * - If the completion overlaps with an existing incomplete completion, that one
      * will be removed and the new one inserted (even if it is incomplete)
      *
      * To complete an incomplete completion, make sure to keep the incomplete completion part of the
-     * completion and not move it to the prefix. That would lead to a new completion, as it doesn't overlap.
+     * completion and not move it to the prefix.
+     * That would lead to a new completion, as they don't overlap.
      *
      * @param completion Empty completions will be ignored
      */
@@ -68,7 +69,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
     }
 
     /**
-     * Retrieves a completion for the given prefix if it exists.
+     * Retrieves a completion for the given prefix if it exists, `null` otherwise.
      * Updates the LRU indexes for the accessed nodes on success.
      */
     fun getCompletion(prefix: String): CompletionResult? {
@@ -186,7 +187,6 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
         val edge = node.edges[firstChar]
         val sizeChange: Int
 
-
         if (edge != null) {
             val commonLength = commonPrefixLength(toInsert, edge.label)
 
@@ -198,6 +198,7 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
                 } else {
                     insert(edge.node, prefix, remainingInsert, isComplete)
                 }
+
                 if (!isInsertingPrefix) {
                     node.completionEdge = edge
                 }
@@ -214,6 +215,14 @@ class CompletionTrie(private var maxSize: Int = 1_000_000) {
                 node.completionEdge = node.edges[firstChar]
             }
             sizeChange = toInsert.length + insert(newNode, "", if (isInsertingPrefix) completion else "", isComplete)
+        }
+
+        // After removing incomplete completions, we might have created unnecessary inner nodes.
+        if (node.completionEdge?.node?.edges?.size == 1 && node.completionEdge?.node?.lruIndex == null) {
+            val soleChildEdge = node.completionEdge!!.node.edges.values.first()
+            val completionEdge = node.completionEdge!!
+            completionEdge.label += soleChildEdge.label
+            completionEdge.node = soleChildEdge.node
         }
 
         node.size += sizeChange

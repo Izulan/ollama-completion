@@ -26,12 +26,15 @@ class CompletionProviderTest : BasePlatformTestCase() {
         service<OllamaSettings>().state.deleteLineTail = deleteLineTail
     }
 
+    /**
+     * Test that the tail deletion actually deletes the tail.
+     */
     @Test
     fun testDeleteTailNoBreak() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>tail")
         register(true)
 
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, res ->
             res.append("test")
             true
         }
@@ -42,13 +45,16 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("funtest<caret>")
     }
 
+    /**
+     * Test that the tail deletion does not touch the next line.
+     */
     @Test
     fun testDeleteTailBreak() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>curline\nnextline")
         register(true)
         service<OllamaSettings>().state.deleteLineTail = true
 
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, res ->
             res.append("test")
             true
         }
@@ -59,13 +65,16 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("funtest<caret>\nnextline")
     }
 
+    /**
+     * Test that the tail deletion only deletes the line after the last inserted character.
+     */
     @Test
     fun testDeleteTailBreakInCompletion() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>curline\nnextline")
-        register(true)
+        register(false)
         service<OllamaSettings>().state.deleteLineTail = true
 
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, res ->
             res.append("test\n")
             true
         }
@@ -76,12 +85,15 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("funtest\n<caret>\nnextline")
     }
 
+    /**
+     * Test the completion provider when giving time for a request to complete.
+     */
     @Test
     fun testLetComplete() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, res ->
             res.append("test")
             true
         }
@@ -97,13 +109,16 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("funtestotest<caret>")
     }
 
+    /**
+     * Test interrupting the completion provider during a completion request with a new one.
+     */
     @Test
     fun testInterruptCompletion() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
         val chan = Channel<Unit>()
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, _ ->
             chan.send(Unit)
             awaitCancellation()
         }
@@ -119,13 +134,16 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("funo<caret>")
     }
 
+    /**
+     * Test allowing a previous request to finish when the output matches the new input.
+     */
     @Test
     fun testContinueCompletion() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
         val chan = Channel<Unit>()
-        CompletionServiceMock.streamGenerator = { prompt, res ->
+        CompletionServiceMock.streamGenerator = { _, res ->
             res.append("c")
             chan.send(Unit)
             res.append("tion")
@@ -150,10 +168,13 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertInlineRender("ction")
     }
 
+    /**
+     * Test the storage and usage of incomplete completions.
+     */
     @Test
     fun testContinueIncomplete() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
         val chan = Channel<Unit>()
         CompletionServiceMock.streamGenerator = { prompt, res ->
@@ -186,10 +207,14 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertInlineRender("ion")
     }
 
+    /**
+     * Test that incomplete completions get considered for the next request.
+     * Also see that output added after cancellation is considered.
+     */
     @Test
     fun testUnnecessaryCompletionCancellation() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
         val block = AtomicBoolean(true)
         val chan = Channel<Unit>()
@@ -197,6 +222,7 @@ class CompletionProviderTest : BasePlatformTestCase() {
             when (prompt) {
                 "fun" -> {
                     chan.send(Unit)
+                    // A channel would get canceled, this not
                     while (block.get()) Thread.yield()
                     res.append("ction")
                     false
@@ -216,18 +242,21 @@ class CompletionProviderTest : BasePlatformTestCase() {
         assertInlineRender("tion")
     }
 
+    /**
+     * Test that no two completion jobs are executed at the same time.
+     */
     @Test
     fun testTerminatePrevRequest() = myFixture.testInlineCompletion {
         init(PlainTextFileType.INSTANCE, "fu<caret>")
-        register(true)
+        register(false)
 
         val block = AtomicBoolean(true)
         val chan = Channel<Unit>()
-        CompletionServiceMock.shouldSetDone = false
         CompletionServiceMock.streamGenerator = { prompt, res ->
             when (prompt) {
                 "fun" -> {
                     chan.send(Unit)
+                    // A channel would get canceled, this not
                     while (block.get()) Thread.yield()
                     false
                 }

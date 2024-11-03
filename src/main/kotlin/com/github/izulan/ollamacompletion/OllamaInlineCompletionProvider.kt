@@ -36,7 +36,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
     private fun shouldLetFinish(prompt: String): Boolean {
         val activePrompt = completionService.activePrompt ?: return false
 
-        // In many programming languages I often return to special points in the program.
+        // In many programming languages, I often return to special points in the program.
         // We deem these completions 'higher value' and allow them extra time to complete
         val isJunction = activePrompt.endsWith('.')
                 || activePrompt.endsWith('\n')
@@ -44,7 +44,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
 
         return (prompt.startsWith(activePrompt) &&
                 completionService.response.startsWith(prompt.substring(activePrompt.length))
-                ) || (isJunction && (abs(activePrompt.length - prompt.length) < 10))
+                ) || (isJunction && (abs(activePrompt.length - prompt.length) < 5))
     }
 
     private fun putCacheCompletion(document: Document) {
@@ -72,6 +72,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
         var incompleteCompletion = ""
 
         // Mutex necessary as the completion trie is not thread-safe at all
+        // Step 1: Check cache and decide on whether to terminate the current job or not
         mutex.withLock {
             // Cache-hits leave the provider unaffected
             // Allow previous request to continue processing (the API will discard the result anyway)
@@ -80,7 +81,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
                     emit(InlineCompletionGrayTextElement(it.completion))
                     return@build
                 } else {
-                    // If an incomplete completion exists use that as an elevated starting point
+                    // If an incomplete completion exists, use that as an elevated starting point
                     // for the completion generation
                     incompleteCompletion = it.completion
                 }
@@ -88,7 +89,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
 
             activeRequest = request
 
-            // Requests of differing documents always get cancelled
+            // Requests of differing documents always get canceled
             if ((!completionService.isResponseDone && !shouldLetFinish(filePrefix))
                 || ignoreResult
             ) {
@@ -98,6 +99,8 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
 
         activeApiJob?.join()
 
+        // Step 2: Cache the generated completion from the previous job, return if that one already fits,
+        // otherwise start a new streaming job
         mutex.withLock {
             // Should never be needed as cancellation should already end this in the join
             // Keep it as a safety net due to experimental API
@@ -110,7 +113,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
                 // Cache the complete or incomplete result from that previous request
                 putCacheCompletion(request.document)
                 activeApiJob = null
-                // Maybe that new completion is already fitting
+                // Maybe that new completion already fits
                 getCacheCompletion(request.document, filePrefix)?.let {
                     if (it.isComplete) {
                         emit(InlineCompletionGrayTextElement(it.completion))
@@ -131,6 +134,7 @@ class OllamaInlineCompletionProvider : InlineCompletionProvider {
 
         activeApiJob?.join()
 
+        // Step 3: Return our generated completion and store it in the cache
         mutex.withLock {
             if (request != activeRequest) {
                 // Another request is handling the request

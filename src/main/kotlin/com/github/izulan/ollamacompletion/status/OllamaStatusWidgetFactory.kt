@@ -31,29 +31,44 @@ class OllamaStatusWidgetFactory : StatusBarWidgetFactory, Activatable {
         override fun ID() = ID
 
         override fun onStart() {
-            getComponent().text = "Connecting"
-            getComponent().icon = AllIcons.General.Web
+            getComponent().let {
+                it.text = "Connecting"
+                it.icon = AllIcons.General.Web
+                it.toolTipText = ""
+            }
         }
 
         override fun onComplete(totalDuration: Long) {
             val secs = totalDuration / 1e9
-            getComponent().text = "Done in %.2fs".format(secs)
-            getComponent().icon = AllIcons.Actions.Checked
+            getComponent().let {
+                it.text = "Done in %.2fs".format(secs)
+                it.icon = AllIcons.Actions.Checked
+                it.toolTipText = ""
+            }
         }
 
         override fun onCancel() {
-            getComponent().text = "Cancelled"
-            getComponent().icon = AllIcons.Actions.Cancel
+            getComponent().let {
+                it.text = "Cancelled"
+                it.icon = AllIcons.Actions.Cancel
+                it.toolTipText = ""
+            }
         }
 
         override fun onConnected() {
-            getComponent().text = "Generating"
-            getComponent().icon = AllIcons.Actions.Lightning
+            getComponent().let {
+                it.text = "Generating"
+                it.icon = AllIcons.Actions.Lightning
+                it.toolTipText = ""
+            }
         }
 
         override fun onError(message: String) {
-            getComponent().text = message
-            getComponent().icon = AllIcons.General.Error
+            getComponent().let {
+                it.text = "Error"
+                it.icon = AllIcons.General.Error
+                it.toolTipText = message
+            }
         }
     }
 

@@ -5,6 +5,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/**
+ * Helper class for testing the completion provider.
+ */
 class CompletionServiceMock(private val cs: CoroutineScope) : CompletionService {
     @Volatile
     override var activePrompt: String? = null
@@ -24,8 +27,7 @@ class CompletionServiceMock(private val cs: CoroutineScope) : CompletionService 
     }
 
     companion object {
-        var shouldSetDone = true
         var streamGenerator: suspend (String, StringBuffer) -> Boolean =
-            { prompt: String, res: StringBuffer -> true }
+            { _: String, _: StringBuffer -> true }
     }
 }

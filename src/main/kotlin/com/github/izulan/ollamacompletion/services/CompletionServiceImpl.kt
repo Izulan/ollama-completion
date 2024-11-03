@@ -1,6 +1,5 @@
 package com.github.izulan.ollamacompletion.services
 
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.github.izulan.ollamacompletion.settings.OllamaSettings
 import com.github.izulan.ollamacompletion.topics.OllamaStatusNotifier
 import com.intellij.openapi.Disposable
@@ -9,7 +8,6 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import io.github.ollama4j.models.generate.OllamaGenerateRequestBuilder
 import io.github.ollama4j.models.generate.OllamaGenerateResponseModel
-import io.github.ollama4j.models.response.OllamaErrorResponse
 import io.github.ollama4j.utils.OptionsBuilder
 import io.github.ollama4j.utils.Utils
 import io.ktor.client.*
@@ -59,7 +57,6 @@ class CompletionServiceImpl(private val cs: CoroutineScope) : CompletionService,
         prompt: String,
         incompleteCompletion: String,
     ): Job {
-
         isResponseDone = false
         response.setLength(0)
         response.append(incompleteCompletion)
@@ -102,28 +99,22 @@ class CompletionServiceImpl(private val cs: CoroutineScope) : CompletionService,
                         val packet = channel.readUTF8Line() ?: continue
 
                         // The packet may be an error (typically when the model is not in memory yet)
-                        // These resolve themselves and can be skipped
-                        try {
-                            val ollamaRes =
-                                Utils.getObjectMapper().readValue(packet, OllamaGenerateResponseModel::class.java)
-                            response.append(ollamaRes.response)
+                        // These resolve themselves and will be skipped
+                        val ollamaRes =
+                            Utils.getObjectMapper().readValue(packet, OllamaGenerateResponseModel::class.java)
+                        response.append(ollamaRes.response)
 
-                            if (ollamaRes.isDone) {
-                                isResponseDone = true
-                                publisher.onComplete(ollamaRes.totalDuration)
-                                break
-                            }
-                        } catch (ex: JsonMappingException) {
-                            val errorRes = Utils.getObjectMapper().readValue(packet, OllamaErrorResponse::class.java)
-                            publisher.onError(errorRes.error)
+                        if (ollamaRes.isDone) {
+                            isResponseDone = true
+                            publisher.onComplete(ollamaRes.totalDuration)
                             break
                         }
                     }
                 }
             } catch (_: CancellationException) {
                 publisher.onCancel()
-            } catch (_: Exception) {
-                publisher.onError("Error")
+            } catch (e: Exception) {
+                publisher.onError(e.message ?: "Unknown error")
             }
         }
     }
