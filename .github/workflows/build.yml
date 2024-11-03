@@ -269,5 +269,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          zip -r "${{ steps.artifact.outputs.download-path }}.zip" ${{ steps.artifact.outputs.download-path }}
           gh release upload "v${{ needs.build.outputs.version }}" \
-            ${{ steps.artifact.outputs.download-path }}
+            "${{ steps.artifact.outputs.download-path }}.zip"
