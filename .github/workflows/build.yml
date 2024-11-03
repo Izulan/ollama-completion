@@ -234,6 +234,12 @@ jobs:
       - name: Fetch Sources
         uses: actions/checkout@v4
 
+      # Download the plugin artifact from the build step
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.filename }}
+
       # Remove old release drafts by using the curl request for the available releases with a draft flag
       - name: Remove Old Release Drafts
         env:
@@ -242,6 +248,7 @@ jobs:
           gh api repos/{owner}/{repo}/releases \
             --jq '.[] | select(.draft == true) | .id' \
             | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
+            # Download the plugin artifact from the build step
 
       # Create a new release draft which is not publicly visible and requires manual acceptance
       - name: Create Release Draft
@@ -255,3 +262,11 @@ jobs:
           ${{ needs.build.outputs.changelog }}
           EOM
           )"
+
+      # Upload the plugin artifact to the draft release
+      - name: Upload Artifact to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ needs.build.outputs.version }}" \
+            "./${{ needs.build.outputs.filename }}.zip"
