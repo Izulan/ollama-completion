@@ -237,6 +237,7 @@ jobs:
 
       # Download the plugin artifact from the build step
       - name: Download Plugin Artifact
+        id: artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.filename }}
@@ -249,7 +250,6 @@ jobs:
           gh api repos/{owner}/{repo}/releases \
             --jq '.[] | select(.draft == true) | .id' \
             | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
-            # Download the plugin artifact from the build step
 
       # Create a new release draft which is not publicly visible and requires manual acceptance
       - name: Create Release Draft
@@ -270,4 +270,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "v${{ needs.build.outputs.version }}" \
-            "./${{ needs.build.outputs.filename }}"
+            ${{ steps.artifact.outputs.download-path }}
