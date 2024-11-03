@@ -270,4 +270,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "v${{ needs.build.outputs.version }}" \
-            "./${{ needs.build.outputs.filename }}.zip"
+            "./${{ needs.build.outputs.filename }}"
