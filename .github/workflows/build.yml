@@ -34,6 +34,7 @@ jobs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
+      filename: ${{ steps.artifact.outputs.filename }}
     steps:
 
       # Check out the current repository
